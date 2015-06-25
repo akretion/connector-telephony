@@ -146,28 +146,6 @@ class asterisk_server(orm.Model):
             'context', 'alert_info', 'login', 'password']
         )]
 
-    def _get_asterisk_server_from_user(self, cr, uid, context=None):
-        '''Returns an asterisk.server browse object'''
-        # We check if the user has an Asterisk server configured
-        user = self.pool['res.users'].browse(cr, uid, uid, context=context)
-        if user.asterisk_server_id.id:
-            ast_server = user.asterisk_server_id
-        else:
-            asterisk_server_ids = self.search(
-                cr, uid, [('company_id', '=', user.company_id.id)],
-                context=context)
-        # If the user doesn't have an asterisk server,
-        # we take the first one of the user's company
-            if not asterisk_server_ids:
-                raise orm.except_orm(
-                    _('Error:'),
-                    _("No Asterisk server configured for the company '%s'.")
-                    % user.company_id.name)
-            else:
-                ast_server = self.browse(
-                    cr, uid, asterisk_server_ids[0], context=context)
-        return ast_server
-
     def _connect_to_asterisk(self, cr, uid, context=None):
         '''
         Open the connection to the Asterisk Manager
@@ -176,8 +154,8 @@ class asterisk_server(orm.Model):
         '''
         user = self.pool['res.users'].browse(cr, uid, uid, context=context)
 
-        ast_server = self._get_asterisk_server_from_user(
-            cr, uid, context=context)
+        ast_server = self.pool['res.users'].get_asterisk_server_from_user(
+            cr, uid, [user.id], context=context)
         # We check if the current user has a chan type
         if not user.asterisk_chan_type:
             raise orm.except_orm(
@@ -390,6 +368,31 @@ class res_users(orm.Model):
         "Error message in raise",
         ['resource', 'internal_number', 'callerid']
         )]
+
+    # will be an api.multi in new API, so that we can call it
+    # with user.get_asterisk_server_from_user
+    def get_asterisk_server_from_user(self, cr, uid, ids, context=None):
+        '''Returns an asterisk.server browse object'''
+        # We check if the user has an Asterisk server configured
+        assert len(ids) == 1, 'Only 1 ID'
+        user = self.pool['res.users'].browse(cr, uid, ids[0], context=context)
+        if user.asterisk_server_id.id:
+            ast_server = user.asterisk_server_id
+        else:
+            asterisk_server_ids = self.search(
+                cr, uid, [('company_id', '=', user.company_id.id)],
+                context=context)
+        # If the user doesn't have an asterisk server,
+        # we take the first one of the user's company
+            if not asterisk_server_ids:
+                raise orm.except_orm(
+                    _('Error:'),
+                    _("No Asterisk server configured for the company '%s'.")
+                    % user.company_id.name)
+            else:
+                ast_server = self.browse(
+                    cr, uid, asterisk_server_ids[0], context=context)
+        return ast_server
 
 
 class PhoneCommon(orm.AbstractModel):
