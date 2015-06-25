@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2015 Akretion (http://www.akretion.com/)
+    @author: Alexis de Lattre <alexis.delattre@akretion.com>
+    The licence is in the file __openerp__.py
+-->
+
+<openerp>
+<data>
+
+<record id="xivo_create_user_form" model="ir.ui.view">
+    <field name="name">xivo.create.user.form</field>
+    <field name="model">xivo.create.user</field>
+    <field name="arch" type="xml">
+        <form string="Create Xivo User">
+            <group name="main">
+                <field name="grant_xivo_client"/>
+                <field name="xivo_client_login"
+                    attrs="{'invisible': [('grant_xivo_client', '=', False)], 'required': [('grant_xivo_client', '=', True)]}"/>
+                <field name="xivo_client_password"
+                    attrs="{'invisible': [('grant_xivo_client', '=', False)], 'required': [('grant_xivo_client', '=', True)]}"/>
+                <field name="create_voicemail"/>
+                <field name="create_incall"/>
+                <field name="create_agent"/>
+            </group>
+            <footer>
+                <button name="create_user" string="Create" type="object" class="oe_highlight"/>
+                <button special="cancel" string="Cancel" class="oe_link"/>
+            </footer>
+        </form>
+    </field>
+</record>
+
+<record id="xivo_create_user_action" model="ir.actions.act_window">
+    <field name="name">Create Xivo User</field>
+    <field name="res_model">xivo.create.user</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+</record>
+
+</data>
+</openerp>

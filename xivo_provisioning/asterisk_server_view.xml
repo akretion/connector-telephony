@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2015 Akretion (http://www.akretion.com/)
+    @author: Alexis de Lattre <alexis.delattre@akretion.com>
+    The licence is in the file __openerp__.py
+-->
+
+<openerp>
+<data>
+
+<record id="view_asterisk_server_form" model="ir.ui.view">
+    <field name="name">xivo.asterisk.server.form</field>
+    <field name="model">asterisk.server</field>
+    <field name="inherit_id" ref="asterisk_click2dial.view_asterisk_server_form"/>
+    <field name="arch" type="xml">
+        <group name="dialplan" position="after">
+            <group name="xivo-prov" string="Xivo Provisioning">
+                <field name="xivo_webservice_login"/>
+                <field name="xivo_webservice_password" password="1"/>
+                <field name="xivo_default_ring_seconds"/>
+                <field name="xivo_default_simult_calls"/>
+                <field name="xivo_default_moh"/>
+                <field name="xivo_default_voicemail_pin"/>
+            </group>
+        </group>
+    </field>
+</record>
+
+</data>
+</openerp>

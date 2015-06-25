@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2015 Akretion (http://www.akretion.com/)
+    @author: Alexis de Lattre <alexis.delattre@akretion.com>
+    The licence is in the file __openerp__.py
+-->
+
+<openerp>
+<data>
+
+<record id="view_users_form" model="ir.ui.view">
+    <field name="name">xivo.res.users.form</field>
+    <field name="model">res.users</field>
+    <field name="inherit_id" ref="asterisk_click2dial.view_users_form"/>
+    <field name="arch" type="xml">
+        <group name="asterisk-optional" position="after">
+            <group name="xivo-prov" string="Xivo Parameters">
+                <button name="%(xivo_create_user_action)d" type="action" string="Create Xivo User" attrs="{'invisible': [('xivo_user_identifier', '!=', 0)]}" colspan="2"/>
+                <field name="xivo_user_identifier"/>
+                <!-- button see user in Xivo: no, pb with public/private -->
+            </group>
+        </group>
+    </field>
+</record>
+
+</data>
+</openerp>
