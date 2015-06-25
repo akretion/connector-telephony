@@ -102,6 +102,10 @@ class XivoCreateUser(models.TransientModel):
     def _prepare_user_payload(
             self, server, user, internal_number, new_agent_id, callerid):
         firstname, lastname = self.extract_xivo_firstname_lastname(user)
+        mobile = False
+        if user.mobile:
+            mobile = self.env['phone.common'].convert_to_dial_number(
+                user.mobile)
         res = {
             'dialaction': {
                 'busy': {'actiontype': 'none'},
@@ -136,7 +140,7 @@ class XivoCreateUser(models.TransientModel):
                 'enableclient': False,
                 'loginclient': '',
                 'passwdclient': '',
-                'mobilephonenumber': user.mobile or False,
+                'mobilephonenumber': mobile,
                 'musiconhold': server.xivo_default_moh,
                 'profileclient': 'Client',
                 'ringseconds': server.xivo_default_ring_seconds,

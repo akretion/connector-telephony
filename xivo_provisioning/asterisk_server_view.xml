@@ -21,6 +21,7 @@
                 <field name="xivo_default_simult_calls"/>
                 <field name="xivo_default_moh"/>
                 <field name="xivo_default_voicemail_pin"/>
+                <field name="xivo_default_xivo_client_password"/>
             </group>
         </group>
     </field>

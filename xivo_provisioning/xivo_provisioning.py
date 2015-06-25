@@ -84,14 +84,18 @@ class AsteriskServer(models.Model):
         xivo = self._prepare_xivo_webservices(url)
         res_request = requests.get(
             xivo['url'], auth=xivo['auth'], verify=False)
-        if res_request.status_code != 200:
+        if res_request.status_code == 200:
+            res = res_request.json()
+            if not res:
+                raise Warning(_(
+                    "The request to %s returned an empty answer") % url)
+            return res
+        elif res_request.status_code == 204:
+            return []
+        else:
             raise Warning(_(
                 "The request to %s returned HTTP code %d")
                 % (url, res_request.status_code))
-        if not res_request.json():
-            raise Warning(_(
-                "The request to %s returned an empty answer") % url)
-        return res_request.json()
 
     @api.multi
     def xivo_post_request(self, url, payload):
