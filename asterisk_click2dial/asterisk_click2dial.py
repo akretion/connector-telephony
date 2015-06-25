@@ -376,7 +376,7 @@ class res_users(orm.Model):
         # We check if the user has an Asterisk server configured
         assert len(ids) == 1, 'Only 1 ID'
         user = self.pool['res.users'].browse(cr, uid, ids[0], context=context)
-        if user.asterisk_server_id.id:
+        if user.asterisk_server_id:
             ast_server = user.asterisk_server_id
         else:
             asterisk_server_ids = self.search(
@@ -390,7 +390,7 @@ class res_users(orm.Model):
                     _("No Asterisk server configured for the company '%s'.")
                     % user.company_id.name)
             else:
-                ast_server = self.browse(
+                ast_server = self.pool['asterisk.server'].browse(
                     cr, uid, asterisk_server_ids[0], context=context)
         return ast_server
 
