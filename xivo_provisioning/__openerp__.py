@@ -30,7 +30,7 @@
     'author': "Akretion,Odoo Community Association (OCA)",
     'website': 'http://www.akretion.com/',
     'depends': ['asterisk_click2dial'],
-    'external_dependencies': {'python': ['requests', 'json']},
+    'external_dependencies': {'python': ['requests', 'json', 'unidecode']},
     'data': [
         'wizard/xivo_create_user_view.xml',
         'asterisk_server_view.xml',

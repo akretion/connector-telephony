@@ -24,6 +24,7 @@
 from openerp import models, fields, api, _
 from openerp.exceptions import Warning
 import logging
+from unidecode import unidecode
 from pprint import pprint
 
 logger = logging.getLogger(__name__)
@@ -95,7 +96,7 @@ class XivoCreateUser(models.TransientModel):
                     % (user.name, user.company_id.name))
             number = self.env['phone.common'].convert_to_dial_number(
                 user.company_id.phone)
-        res = '"%s" <%s>' % (user.name, number)
+        res = '"%s" <%s>' % (unidecode(user.name), number)
         return res
 
     @api.model
@@ -299,6 +300,7 @@ class XivoCreateUser(models.TransientModel):
                     break
             assert new_agent_id, 'Could not get the Agent ID'
 
+        # Create user + voicemail
         callerid = self._prepare_callerid(user, server, sda)
         user_payload = self._prepare_user_payload(
             server, user, intnum, new_agent_id, callerid)
@@ -332,11 +334,7 @@ class XivoCreateUser(models.TransientModel):
             raise Warning(_(
                 "SIP login is not a string. This should never happen"))
 
-        user.write({
-            'xivo_user_identifier': xivo_user_id,
-            'callerid': callerid,
-            'resource': sip_login,
-            })
+        # Create incoming call
         if self.create_incall:
             incall_payload = self._prepare_incall_payload(
                 sda, xivo_user_id)
@@ -353,4 +351,10 @@ class XivoCreateUser(models.TransientModel):
                     '/service/ipbx/json.php/restricted/call_management/incall/'
                     '?act=edit&id=%d' % incall_id, incall_payload)
                 logger.info("Incoming call '%s' has been updated" % sda)
+
+        user.write({
+            'xivo_user_identifier': xivo_user_id,
+            'callerid': callerid,
+            'resource': sip_login,
+            })
         return
