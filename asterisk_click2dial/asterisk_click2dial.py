@@ -19,7 +19,8 @@
 #
 ##############################################################################
 
-from openerp.osv import fields, orm
+
+from openerp import models, api, fields, exceptions
 from openerp.tools.translate import _
 import logging
 
@@ -33,73 +34,68 @@ except ImportError:
 _logger = logging.getLogger(__name__)
 
 
-class asterisk_server(orm.Model):
+class AsteriskServer(models.Model):
     '''Asterisk server object, stores the parameters of the Asterisk IPBXs'''
     _name = "asterisk.server"
     _description = "Asterisk Servers"
-    _columns = {
-        'name': fields.char('Asterisk Server Name', size=50, required=True),
-        'active': fields.boolean(
-            'Active', help="The active field allows you to hide the Asterisk "
-            "server without deleting it."),
-        'ip_address': fields.char(
-            'Asterisk IP address or DNS', size=50, required=True,
-            help="IP address or DNS name of the Asterisk server."),
-        'port': fields.integer(
-            'Port', required=True,
-            help="TCP port on which the Asterisk Manager Interface listens. "
-            "Defined in /etc/asterisk/manager.conf on Asterisk."),
-        'out_prefix': fields.char(
-            'Out Prefix', size=4, help="Prefix to dial to make outgoing "
-            "calls. If you don't use a prefix to make outgoing calls, "
-            "leave empty."),
-        'login': fields.char(
-            'AMI Login', size=30, required=True,
-            help="Login that OpenERP will use to communicate with the "
-            "Asterisk Manager Interface. Refer to /etc/asterisk/manager.conf "
-            "on your Asterisk server."),
-        'password': fields.char(
-            'AMI Password', size=30, required=True,
-            help="Password that OpenERP will use to communicate with the "
-            "Asterisk Manager Interface. Refer to /etc/asterisk/manager.conf "
-            "on your Asterisk server."),
-        'context': fields.char(
-            'Dialplan Context', size=50, required=True,
-            help="Asterisk dialplan context from which the calls will be "
-            "made. Refer to /etc/asterisk/extensions.conf on your Asterisk "
-            "server."),
-        'wait_time': fields.integer(
-            'Wait Time (sec)', required=True,
-            help="Amount of time (in seconds) Asterisk will try to reach "
-            "the user's phone before hanging up."),
-        'extension_priority': fields.integer(
-            'Extension Priority', required=True,
-            help="Priority of the extension in the Asterisk dialplan. Refer "
-            "to /etc/asterisk/extensions.conf on your Asterisk server."),
-        'alert_info': fields.char(
-            'Alert-Info SIP Header', size=255,
-            help="Set Alert-Info header in SIP request to user's IP Phone "
-            "for the click2dial feature. If empty, the Alert-Info header "
-            "will not be added. You can use it to have a special ring tone "
-            "for click2dial (a silent one !) or to activate auto-answer "
-            "for example."),
-        'company_id': fields.many2one(
-            'res.company', 'Company',
-            help="Company who uses the Asterisk server."),
-    }
 
-    _defaults = {
-        'active': True,
-        'port': 5038,  # Default AMI port
-        'extension_priority': 1,
-        'wait_time': 15,
-        'company_id': lambda self, cr, uid, context:
+    name = fields.Char(string='Asterisk Server Name', size=50, required=True),
+    active = fields.Boolean(
+        string='Active', help="The active field allows you to hide the Asterisk "
+        "server without deleting it.", default=True),
+    ip_address = fields.Char(
+        string='Asterisk IP address or DNS', size=50, required=True,
+        help="IP address or DNS name of the Asterisk server."),
+    port = fields.Integer(
+        string = 'Port', required=True,
+        help="TCP port on which the Asterisk Manager Interface listens. "
+        "Defined in /etc/asterisk/manager.conf on Asterisk.", default = 5038),
+    out_prefix = fields.Char(
+        string='Out Prefix', size=4, help="Prefix to dial to make outgoing "
+        "calls. If you don't use a prefix to make outgoing calls, "
+        "leave empty."),
+    login = fields.Char(
+        string='AMI Login', size=30, required=True,
+        help="Login that OpenERP will use to communicate with the "
+        "Asterisk Manager Interface. Refer to /etc/asterisk/manager.conf "
+        "on your Asterisk server."),
+    password = fields.Char(
+        string='AMI Password', size=30, required=True,
+        help="Password that OpenERP will use to communicate with the "
+        "Asterisk Manager Interface. Refer to /etc/asterisk/manager.conf "
+        "on your Asterisk server."),
+    context = fields.Char(
+        string='Dialplan Context', size=50, required=True,
+        help="Asterisk dialplan context from which the calls will be "
+        "made. Refer to /etc/asterisk/extensions.conf on your Asterisk "
+        "server."),
+    wait_time = fields.Integer(
+        string='Wait Time (sec)', required=True,
+        help="Amount of time (in seconds) Asterisk will try to reach "
+        "the user's phone before hanging up.", default = 15),
+    extension_priority = fields.Integer(
+        string='Extension Priority', required=True,
+        help="Priority of the extension in the Asterisk dialplan. Refer "
+        "to /etc/asterisk/extensions.conf on your Asterisk server.", default = 1),
+    alert_info = fields.Char(
+        string='Alert-Info SIP Header', size=255,
+        help="Set Alert-Info header in SIP request to user's IP Phone "
+        "for the click2dial feature. If empty, the Alert-Info header "
+        "will not be added. You can use it to have a special ring tone "
+        "for click2dial (a silent one !) or to activate auto-answer "
+        "for example."),
+    company_id = fields.Many2one(
+        'res.company', string='Company',
+        help="Company who uses the Asterisk server.", default = lambda self, cr, uid, context:
         self.pool['res.company']._company_default_get(
-            cr, uid, 'asterisk.server', context=context),
-    }
+            cr, uid, 'asterisk.server', context=context)),
 
-    def _check_validity(self, cr, uid, ids):
-        for server in self.browse(cr, uid, ids):
+
+    @api.one
+    @api.constrains('out_prefix', 'wait_time', 'extension_priority', 'port',
+                    'dialplan_context', 'alert_info', 'login', 'password')
+    def _check_validity(self):
+        for server in self:
             out_prefix = ('Out prefix', server.out_prefix)
             dialplan_context = ('Dialplan context', server.context)
             alert_info = ('Alert-Info SIP header', server.alert_info)
@@ -107,22 +103,22 @@ class asterisk_server(orm.Model):
             password = ('AMI password', server.password)
 
             if out_prefix[1] and not out_prefix[1].isdigit():
-                raise orm.except_orm(
+                raise UserError(
                     _('Error:'),
                     _("Only use digits for the '%s' on the Asterisk server "
                         "'%s'" % (out_prefix[0], server.name)))
             if server.wait_time < 1 or server.wait_time > 120:
-                raise orm.except_orm(
+                raise UserError(
                     _('Error:'),
                     _("You should set a 'Wait time' value between 1 and 120 "
                         "seconds for the Asterisk server '%s'" % server.name))
             if server.extension_priority < 1:
-                raise orm.except_orm(
+                raise UserError(
                     _('Error:'),
                     _("The 'extension priority' must be a positive value for "
                         "the Asterisk server '%s'" % server.name))
             if server.port > 65535 or server.port < 1:
-                raise orm.except_orm(
+                raise UserError(
                     _('Error:'),
                     _("You should set a TCP port between 1 and 65535 for the "
                         "Asterisk server '%s'" % server.name))
@@ -131,25 +127,18 @@ class asterisk_server(orm.Model):
                     try:
                         check_str[1].encode('ascii')
                     except UnicodeEncodeError:
-                        raise orm.except_orm(
+                        raise UserError(
                             _('Error:'),
                             _("The '%s' should only have ASCII caracters for "
                                 "the Asterisk server '%s'"
                                 % (check_str[0], server.name)))
         return True
 
-    _constraints = [(
-        _check_validity,
-        "Error message in raise",
-        [
-            'out_prefix', 'wait_time', 'extension_priority', 'port',
-            'context', 'alert_info', 'login', 'password']
-        )]
-
-    def _get_asterisk_server_from_user(self, cr, uid, context=None):
+    @api.model
+    def _get_asterisk_server_from_user(self):
         '''Returns an asterisk.server browse object'''
         # We check if the user has an Asterisk server configured
-        user = self.pool['res.users'].browse(cr, uid, uid, context=context)
+        user = self._context.get('res.users')
         if user.asterisk_server_id.id:
             ast_server = user.asterisk_server_id
         else:
@@ -159,7 +148,7 @@ class asterisk_server(orm.Model):
         # If the user doesn't have an asterisk server,
         # we take the first one of the user's company
             if not asterisk_server_ids:
-                raise orm.except_orm(
+                raise UserError(
                     _('Error:'),
                     _("No Asterisk server configured for the company '%s'.")
                     % user.company_id.name)
@@ -168,25 +157,24 @@ class asterisk_server(orm.Model):
                     cr, uid, asterisk_server_ids[0], context=context)
         return ast_server
 
-    def _connect_to_asterisk(self, cr, uid, context=None):
+    def _connect_to_asterisk(self):
         '''
         Open the connection to the Asterisk Manager
         Returns an instance of the Asterisk Manager
 
         '''
-        user = self.pool['res.users'].browse(cr, uid, uid, context=context)
+        user = self._context.get('res.users')
 
-        ast_server = self._get_asterisk_server_from_user(
-            cr, uid, context=context)
+        ast_server = self._get_asterisk_server_from_user()
         # We check if the current user has a chan type
         if not user.asterisk_chan_type:
-            raise orm.except_orm(
+            raise UserError(
                 _('Error:'),
                 _('No channel type configured for the current user.'))
 
         # We check if the current user has an internal number
         if not user.resource:
-            raise orm.except_orm(
+            raise UserError(
                 _('Error:'),
                 _('No resource name configured for the current user'))
 
@@ -206,14 +194,14 @@ class asterisk_server(orm.Model):
                 "Error in the request to the Asterisk Manager Interface %s"
                 % ast_server.ip_address)
             _logger.error("Here is the error message: %s" % e)
-            raise orm.except_orm(
+            raise UserError(
                 _('Error:'),
                 _("Problem in the request from OpenERP to Asterisk. "
                   "Here is the error message: %s" % e))
 
         return (user, ast_server, ast_manager)
 
-    def test_ami_connection(self, cr, uid, ids, context=None):
+    def test_ami_connection(self):
         assert len(ids) == 1, 'Only 1 ID'
         ast_server = self.browse(cr, uid, ids[0], context=context)
         ast_manager = False
@@ -223,13 +211,13 @@ class asterisk_server(orm.Model):
                 ast_server.login,
                 ast_server.password)
         except Exception, e:
-            raise orm.except_orm(
+            raise UserError(
                 _("Connection Test Failed!"),
                 _("Here is the error message: %s" % e))
         finally:
             if ast_manager:
                 ast_manager.Logoff()
-        raise orm.except_orm(
+        raise UserError(
             _("Connection Test Successfull!"),
             _("Odoo can successfully login to the Asterisk Manager "
                 "Interface."))
@@ -273,7 +261,7 @@ class asterisk_server(orm.Model):
                 % ast_server.ip_address)
             _logger.error(
                 "Here are the details of the error: '%s'" % unicode(e))
-            raise orm.except_orm(
+            raise UserError(
                 _('Error:'),
                 _("Can't get calling number from  Asterisk.\nHere is the "
                     "error: '%s'" % unicode(e)))
@@ -299,7 +287,7 @@ class asterisk_server(orm.Model):
             return False
 
 
-class res_users(orm.Model):
+class Res.Users(model.Model):
     _inherit = "res.users"
 
     _columns = {
