@@ -20,7 +20,7 @@
 ##############################################################################
 
 
-from openerp import models, api, fields, exceptions
+from openerp import models, api, fields
 from openerp.tools.translate import _
 from openerp.exceptions import UserError
 import logging
@@ -42,15 +42,15 @@ class AsteriskServer(models.Model):
 
     name = fields.Char(string='Asterisk Server Name', size=50, required=True)
     active = fields.Boolean(
-        string='Active', help="The active field allows you to hide the Asterisk "
+        string='Active', help="The active field allows you to hide the Asterisk"
         "server without deleting it.", default=True)
     ip_address = fields.Char(
         string='Asterisk IP address or DNS', size=50, required=True,
         help="IP address or DNS name of the Asterisk server.")
     port = fields.Integer(
-        string = 'Port', required=True,
+        string='Port', required=True,
         help="TCP port on which the Asterisk Manager Interface listens. "
-        "Defined in /etc/asterisk/manager.conf on Asterisk.", default = 5038)
+        "Defined in /etc/asterisk/manager.conf on Asterisk.", default=5038)
     out_prefix = fields.Char(
         string='Out Prefix', size=4, help="Prefix to dial to make outgoing "
         "calls. If you don't use a prefix to make outgoing calls, "
@@ -73,11 +73,11 @@ class AsteriskServer(models.Model):
     wait_time = fields.Integer(
         string='Wait Time (sec)', required=True,
         help="Amount of time (in seconds) Asterisk will try to reach "
-        "the user's phone before hanging up.", default = 15)
+        "the user's phone before hanging up.", default=15)
     extension_priority = fields.Integer(
         string='Extension Priority', required=True,
         help="Priority of the extension in the Asterisk dialplan. Refer "
-        "to /etc/asterisk/extensions.conf on your Asterisk server.", default = 1)
+        "to /etc/asterisk/extensions.conf on your Asterisk server.", default=1)
     alert_info = fields.Char(
         string='Alert-Info SIP Header', size=255,
         help="Set Alert-Info header in SIP request to user's IP Phone "
@@ -89,7 +89,6 @@ class AsteriskServer(models.Model):
         'res.company', string='Company',
         help="Company who uses the Asterisk server.",
         default=lambda self: self.env['res.company']._company_default_get('asterisk.server'))
-
 
     @api.one
     @api.constrains('out_prefix', 'wait_time', 'extension_priority', 'port',
@@ -124,36 +123,30 @@ class AsteriskServer(models.Model):
                                 % (check_str[0], server.name)))
         return True
 
-    @api.model
     def _get_asterisk_server_from_user(self):
         '''Returns an asterisk.server browse object'''
         # We check if the user has an Asterisk server configured
-        user = self._context.get('res.users')
+        user = self.env.user
         if user.asterisk_server_id.id:
             ast_server = user.asterisk_server_id
         else:
-            asterisk_server_ids = self.search(
-                [('company_id', '=', user.company_id.id)],
-                context=context)
-        # If the user doesn't have an asterisk server,
-        # we take the first one of the user's company
-            if not asterisk_server_ids:
+            ast_server = self.search(
+                [('company_id', '=', user.company_id.id)], limit=1)
+            # If the user doesn't have an asterisk server,
+            # we take the first one of the user's company
+            if not ast_server:
                 raise UserError(
                     _("Error: No Asterisk server configured for the company '%s'.")
                     % user.company_id.name)
-            else:
-                ast_server = self.browse(
-                    asterisk_server_ids[0], context=context)
         return ast_server
 
-    @api.one
     def _connect_to_asterisk(self):
         '''
         Open the connection to the Asterisk Manager
         Returns an instance of the Asterisk Manager
 
         '''
-        user = self._context.get('res.users')
+        user = self.env.user
 
         ast_server = self._get_asterisk_server_from_user()
         # We check if the current user has a chan type
@@ -189,14 +182,12 @@ class AsteriskServer(models.Model):
 
     @api.one
     def test_ami_connection(self):
-        #assert len(ids) == 1, 'Only 1 ID'
-        ast_server = self
         ast_manager = False
         try:
             ast_manager = Manager.Manager(
-                (ast_server.ip_address, ast_server.port),
-                ast_server.login,
-                ast_server.password)
+                (self.ip_address, self.port),
+                self.login,
+                self.password)
         except Exception, e:
             raise UserError(
                 _("Connection Test Failed! Here is the error message: %s" % e))
@@ -208,8 +199,7 @@ class AsteriskServer(models.Model):
 
     def _get_calling_number(self):
 
-        user, ast_server, ast_manager = self._connect_to_asterisk(
-            )
+        user, ast_server, ast_manager = self._connect_to_asterisk()
         calling_party_number = False
         try:
             list_chan = ast_manager.Status()
@@ -255,12 +245,10 @@ class AsteriskServer(models.Model):
         return calling_party_number
 
     def get_record_from_my_channel(self):
-        calling_number = self.pool['asterisk.server']._get_calling_number(
-            )
+        calling_number = self._get_calling_number()
         # calling_number = "0641981246"
         if calling_number:
-            record = self.pool['phone.common'].get_record_from_phone_number(
-                calling_number)
+            record = self.env['phone.common'].get_record_from_phone_number(calling_number)
             if record:
                 return record
             else:
@@ -303,7 +291,7 @@ class ResUsers(models.Model):
         ('Local', 'Local'),
     ], string='Asterisk Channel Type',
         help="Asterisk channel type, as used in the Asterisk dialplan. "
-        "If the user has a regular IP phone, the channel type is 'SIP'.", default = 'SIP')
+        "If the user has a regular IP phone, the channel type is 'SIP'.", default='SIP')
     resource = fields.Char(
         string='Resource Name', size=64,
         help="Resource name for the channel type selected. For example, "
@@ -330,7 +318,6 @@ class ResUsers(models.Model):
         "If you leave this field empty, it will use the first Asterisk "
         "server of the user's company.")
 
-
     @api.one
     @api.constrains('resource', 'internal_number', 'callerid')
     def _check_validity(self):
@@ -351,22 +338,19 @@ class ResUsers(models.Model):
         return True
 
 
-
 class PhoneCommon(models.AbstractModel):
     _inherit = 'phone.common'
 
+    @api.model
     def click2dial(self, erp_number):
-        res = super(PhoneCommon, self).click2dial(
-            erp_number, context=context)
+        res = super(PhoneCommon, self).click2dial(erp_number)
         if not erp_number:
             raise UserError(
                 _('Error: Missing phone number'))
 
         user, ast_server, ast_manager = \
-            self.pool['asterisk.server']._connect_to_asterisk(
-                context=context)
-        ast_number = self.convert_to_dial_number(
-            erp_number, context=context)
+            self.env['asterisk.server']._connect_to_asterisk()
+        ast_number = self.convert_to_dial_number(erp_number)
         # Add 'out prefix'
         if ast_server.out_prefix:
             _logger.debug('Out prefix = %s' % ast_server.out_prefix)

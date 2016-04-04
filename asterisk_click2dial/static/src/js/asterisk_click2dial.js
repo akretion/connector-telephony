@@ -44,7 +44,7 @@ odoo.define('asterisk_click2dial', function (require) {
                         target: 'new',
                         context: {'default_calling_number': r},
                     };
-                    this.action_manager.do_action(action);
+                    webclient.action_manager.do_action(action);
 
                 }
                 else if (typeof r == 'object' && r.length == 3) {
@@ -60,7 +60,7 @@ odoo.define('asterisk_click2dial', function (require) {
                         target: 'current',
                         context: {},
                     };
-                    this.action_manager.do_action(action);
+                    webclient.action_manager.do_action(action);
                 }
             });
         },
