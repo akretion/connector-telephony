@@ -39,56 +39,56 @@ class AsteriskServer(models.Model):
     _name = "asterisk.server"
     _description = "Asterisk Servers"
 
-    name = fields.Char(string='Asterisk Server Name', size=50, required=True),
+    name = fields.Char(string='Asterisk Server Name', size=50, required=True)
     active = fields.Boolean(
         string='Active', help="The active field allows you to hide the Asterisk "
-        "server without deleting it.", default=True),
+        "server without deleting it.", default=True)
     ip_address = fields.Char(
         string='Asterisk IP address or DNS', size=50, required=True,
-        help="IP address or DNS name of the Asterisk server."),
+        help="IP address or DNS name of the Asterisk server.")
     port = fields.Integer(
         string = 'Port', required=True,
         help="TCP port on which the Asterisk Manager Interface listens. "
-        "Defined in /etc/asterisk/manager.conf on Asterisk.", default = 5038),
+        "Defined in /etc/asterisk/manager.conf on Asterisk.", default = 5038)
     out_prefix = fields.Char(
         string='Out Prefix', size=4, help="Prefix to dial to make outgoing "
         "calls. If you don't use a prefix to make outgoing calls, "
-        "leave empty."),
+        "leave empty.")
     login = fields.Char(
         string='AMI Login', size=30, required=True,
         help="Login that OpenERP will use to communicate with the "
         "Asterisk Manager Interface. Refer to /etc/asterisk/manager.conf "
-        "on your Asterisk server."),
+        "on your Asterisk server.")
     password = fields.Char(
         string='AMI Password', size=30, required=True,
         help="Password that OpenERP will use to communicate with the "
         "Asterisk Manager Interface. Refer to /etc/asterisk/manager.conf "
-        "on your Asterisk server."),
+        "on your Asterisk server.")
     context = fields.Char(
         string='Dialplan Context', size=50, required=True,
         help="Asterisk dialplan context from which the calls will be "
         "made. Refer to /etc/asterisk/extensions.conf on your Asterisk "
-        "server."),
+        "server.")
     wait_time = fields.Integer(
         string='Wait Time (sec)', required=True,
         help="Amount of time (in seconds) Asterisk will try to reach "
-        "the user's phone before hanging up.", default = 15),
+        "the user's phone before hanging up.", default = 15)
     extension_priority = fields.Integer(
         string='Extension Priority', required=True,
         help="Priority of the extension in the Asterisk dialplan. Refer "
-        "to /etc/asterisk/extensions.conf on your Asterisk server.", default = 1),
+        "to /etc/asterisk/extensions.conf on your Asterisk server.", default = 1)
     alert_info = fields.Char(
         string='Alert-Info SIP Header', size=255,
         help="Set Alert-Info header in SIP request to user's IP Phone "
         "for the click2dial feature. If empty, the Alert-Info header "
         "will not be added. You can use it to have a special ring tone "
         "for click2dial (a silent one !) or to activate auto-answer "
-        "for example."),
+        "for example.")
     company_id = fields.Many2one(
         'res.company', string='Company',
         help="Company who uses the Asterisk server.", default = lambda self, cr, uid, context:
         self.pool['res.company']._company_default_get(
-            cr, uid, 'asterisk.server', context=context)),
+            cr, uid, 'asterisk.server', context=context))
 
 
     @api.one
@@ -287,68 +287,66 @@ class AsteriskServer(models.Model):
             return False
 
 
-class Res.Users(model.Model):
+class ResUsers(models.Model):
     _inherit = "res.users"
 
-    _columns = {
-        'internal_number': fields.char(
-            'Internal Number', size=15,
-            help="User's internal phone number."),
-        'dial_suffix': fields.char(
-            'User-specific Dial Suffix', size=15,
-            help="User-specific dial suffix such as aa=2wb for SCCP "
-            "auto answer."),
-        'callerid': fields.char(
-            'Caller ID', size=50,
-            help="Caller ID used for the calls initiated by this user."),
-        # You'd probably think: Asterisk should reuse the callerID of sip.conf!
-        # But it cannot, cf
-        # http://lists.digium.com/pipermail/asterisk-users/
-        # 2012-January/269787.html
-        'cdraccount': fields.char(
-            'CDR Account', size=50,
-            help="Call Detail Record (CDR) account used for billing this "
-            "user."),
-        'asterisk_chan_type': fields.selection([
-            ('SIP', 'SIP'),
-            ('IAX2', 'IAX2'),
-            ('DAHDI', 'DAHDI'),
-            ('Zap', 'Zap'),
-            ('Skinny', 'Skinny'),
-            ('MGCP', 'MGCP'),
-            ('mISDN', 'mISDN'),
-            ('H323', 'H323'),
-            ('SCCP', 'SCCP'),
-            ('Local', 'Local'),
-            ], 'Asterisk Channel Type',
-            help="Asterisk channel type, as used in the Asterisk dialplan. "
-            "If the user has a regular IP phone, the channel type is 'SIP'."),
-        'resource': fields.char(
-            'Resource Name', size=64,
-            help="Resource name for the channel type selected. For example, "
-            "if you use 'Dial(SIP/phone1)' in your Asterisk dialplan to ring "
-            "the SIP phone of this user, then the resource name for this user "
-            "is 'phone1'.  For a SIP phone, the phone number is often used as "
-            "resource name, but not always."),
-        'alert_info': fields.char(
-            'User-specific Alert-Info SIP Header', size=255,
-            help="Set a user-specific Alert-Info header in SIP request to "
-            "user's IP Phone for the click2dial feature. If empty, the "
-            "Alert-Info header will not be added. You can use it to have a "
-            "special ring tone for click2dial (a silent one !) or to "
-            "activate auto-answer for example."),
-        'variable': fields.char(
-            'User-specific Variable', size=255,
-            help="Set a user-specific 'Variable' field in the Asterisk "
-            "Manager Interface 'originate' request for the click2dial "
-            "feature. If you want to have several variable headers, separate "
-            "them with '|'."),
-        'asterisk_server_id': fields.many2one(
-            'asterisk.server', 'Asterisk Server',
-            help="Asterisk server on which the user's phone is connected. "
-            "If you leave this field empty, it will use the first Asterisk "
-            "server of the user's company."),
-        }
+    internal_number = fields.Char(
+        string='Internal Number', size=15,
+        help="User's internal phone number.")
+    dial_suffix = fields.Char(
+        string='User-specific Dial Suffix', size=15,
+        help="User-specific dial suffix such as aa=2wb for SCCP "
+        "auto answer.")
+    callerid = fields.Char(
+        string='Caller ID', size=50,
+        help="Caller ID used for the calls initiated by this user.")
+    # You'd probably think: Asterisk should reuse the callerID of sip.conf!
+    # But it cannot, cf
+    # http://lists.digium.com/pipermail/asterisk-users/
+    # 2012-January/269787.html
+    cdraccount = fields.Char(
+        string='CDR Account', size=50,
+        help="Call Detail Record (CDR) account used for billing this "
+        "user.")
+    asterisk_chan_type = fields.Selection([
+        ('SIP', 'SIP'),
+        ('IAX2', 'IAX2'),
+        ('DAHDI', 'DAHDI'),
+        ('Zap', 'Zap'),
+        ('Skinny', 'Skinny'),
+        ('MGCP', 'MGCP'),
+        ('mISDN', 'mISDN'),
+        ('H323', 'H323'),
+        ('SCCP', 'SCCP'),
+        ('Local', 'Local'),
+    ], string='Asterisk Channel Type',
+        help="Asterisk channel type, as used in the Asterisk dialplan. "
+        "If the user has a regular IP phone, the channel type is 'SIP'.")
+    resource = fields.Char(
+        string='Resource Name', size=64,
+        help="Resource name for the channel type selected. For example, "
+        "if you use 'Dial(SIP/phone1)' in your Asterisk dialplan to ring "
+        "the SIP phone of this user, then the resource name for this user "
+        "is 'phone1'.  For a SIP phone, the phone number is often used as "
+        "resource name, but not always.")
+    alert_info = fields.Char(
+        'User-specific Alert-Info SIP Header', size=255,
+        help="Set a user-specific Alert-Info header in SIP request to "
+        "user's IP Phone for the click2dial feature. If empty, the "
+        "Alert-Info header will not be added. You can use it to have a "
+        "special ring tone for click2dial (a silent one !) or to "
+        "activate auto-answer for example.")
+    variable = fields.Char(
+        string='User-specific Variable', size=255,
+        help="Set a user-specific 'Variable' field in the Asterisk "
+        "Manager Interface 'originate' request for the click2dial "
+        "feature. If you want to have several variable headers, separate "
+        "them with '|'.")
+    asterisk_server_id = fields.Many2one(
+        'asterisk.server', string='Asterisk Server',
+        help="Asterisk server on which the user's phone is connected. "
+        "If you leave this field empty, it will use the first Asterisk "
+        "server of the user's company.")
 
     _defaults = {
         'asterisk_chan_type': 'SIP',
@@ -366,7 +364,7 @@ class Res.Users(model.Model):
                     try:
                         check_string[1].encode('ascii')
                     except UnicodeEncodeError:
-                        raise orm.except_orm(
+                        raise UserError(
                             _('Error:'),
                             _("The '%s' for the user '%s' should only have "
                                 "ASCII caracters")
@@ -380,14 +378,14 @@ class Res.Users(model.Model):
         )]
 
 
-class PhoneCommon(orm.AbstractModel):
+class PhoneCommon(models.AbstractModel):
     _inherit = 'phone.common'
 
     def click2dial(self, cr, uid, erp_number, context=None):
         res = super(PhoneCommon, self).click2dial(
             cr, uid, erp_number, context=context)
         if not erp_number:
-            raise orm.except_orm(
+            raise UserError(
                 _('Error:'),
                 _('Missing phone number'))
 
@@ -404,7 +402,7 @@ class PhoneCommon(orm.AbstractModel):
 
         # The user should have a CallerID
         if not user.callerid:
-            raise orm.except_orm(
+            raise UserError(
                 _('Error:'),
                 _('No callerID configured for the current user'))
 
@@ -440,7 +438,7 @@ class PhoneCommon(orm.AbstractModel):
                 % ast_server.ip_address)
             _logger.error(
                 "Here are the details of the error: '%s'" % unicode(e))
-            raise orm.except_orm(
+            raise UserError(
                 _('Error:'),
                 _("Click to dial with Asterisk failed.\nHere is the error: "
                     "'%s'")
