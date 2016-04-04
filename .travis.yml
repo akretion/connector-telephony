@@ -14,7 +14,7 @@ python:
 
 env:
   global:
-  - VERSION="8.0" TESTS="0" LINT_CHECK="0" TRANSIFEX="0"
+  - VERSION="9.0" TESTS="0" LINT_CHECK="0" TRANSIFEX="0"
   - TRANSIFEX_USER='transbot@odoo-community.org'
   - secure: LhS+tozOz65gNeGs3yQ4WQOJ6o4fljCHp/bAyHXj4QqB4NkRj7ajO92ZasvtWA4BbxDjsz+Rie3Ct9zq0Zmg05rCT58TYxoqnq2+rN+ZOqr46VYnzIk4MapHNXLQuXhAfTVqsJRdpJteF7nn2wnnc3ZDAIJTfLmP8v789iIbCcA=
 
@@ -32,7 +32,7 @@ install:
   - export PATH=${HOME}/maintainer-quality-tools/travis:${PATH}
   - travis_install_nightly
   - pip install phonenumbers py-Asterisk SOAPpy
-  - hg clone http://bitbucket.org/anybox/web_action_request -b ${VERSION} ${HOME}/web_action_request
+  - hg clone http://bitbucket.org/juris_malinens/web_action_request -b ${VERSION} ${HOME}/web_action_request # Pull request is not merged in anybox
   - hg clone http://bitbucket.org/anybox/bus_enhanced ${HOME}/bus_enhanced
 
 script:
