@@ -233,15 +233,15 @@ class asterisk_server(orm.Model):
                     break
                 # 6 = Up
                 if (
-                        chan.get('ChannelState') == '6'
-                        and sip_account in chan.get('BridgedChannel', '')):
+                        chan.get('ChannelState') == '6' and
+                        sip_account in chan.get('BridgedChannel', '')):
                     _logger.debug("Found a matching Event in 'Up' state")
                     calling_party_number = chan.get('CallerIDNum')
                     break
                 # Compatibility with Asterisk 1.4
                 if (
-                        chan.get('State') == 'Up'
-                        and sip_account in chan.get('Link', '')):
+                        chan.get('State') == 'Up' and
+                        sip_account in chan.get('Link', '')):
                     _logger.debug("Found a matching Event in 'Up' state")
                     calling_party_number = chan.get('CallerIDNum')
                     break
@@ -375,15 +375,15 @@ class res_users(orm.Model):
         '''Returns an asterisk.server browse object'''
         # We check if the user has an Asterisk server configured
         assert len(ids) == 1, 'Only 1 ID'
-        user = self.pool['res.users'].browse(cr, uid, ids[0], context=context)
+        user = self.browse(cr, uid, ids[0], context=context)
         if user.asterisk_server_id:
             ast_server = user.asterisk_server_id
         else:
-            asterisk_server_ids = self.search(
+            asterisk_server_ids = self.pool['asterisk.server'].search(
                 cr, uid, [('company_id', '=', user.company_id.id)],
                 context=context)
-        # If the user doesn't have an asterisk server,
-        # we take the first one of the user's company
+            # If the user doesn't have an asterisk server,
+            # we take the first one of the user's company
             if not asterisk_server_ids:
                 raise orm.except_orm(
                     _('Error:'),
