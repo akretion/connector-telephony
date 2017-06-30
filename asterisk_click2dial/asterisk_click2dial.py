@@ -375,15 +375,15 @@ class res_users(orm.Model):
         '''Returns an asterisk.server browse object'''
         # We check if the user has an Asterisk server configured
         assert len(ids) == 1, 'Only 1 ID'
-        user = self.pool['res.users'].browse(cr, uid, ids[0], context=context)
+        user = self.browse(cr, uid, ids[0], context=context)
         if user.asterisk_server_id:
             ast_server = user.asterisk_server_id
         else:
-            asterisk_server_ids = self.search(
+            asterisk_server_ids = self.pool['asterisk.server'].search(
                 cr, uid, [('company_id', '=', user.company_id.id)],
                 context=context)
-        # If the user doesn't have an asterisk server,
-        # we take the first one of the user's company
+            # If the user doesn't have an asterisk server,
+            # we take the first one of the user's company
             if not asterisk_server_ids:
                 raise orm.except_orm(
                     _('Error:'),
