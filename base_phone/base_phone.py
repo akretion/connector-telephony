@@ -122,7 +122,8 @@ class PhoneCommon(models.AbstractModel):
         to add CallerID name to incoming calls.'''
         res = self.get_record_from_phone_number(presented_number)
         if res:
-            return res[2]
+            #CUSTOM OSKAB for agency choice
+            return '%sagency_id:%s' % (res[2], res[3])
         else:
             return False
 
@@ -182,11 +183,19 @@ class PhoneCommon(models.AbstractModel):
                     % (objname, res_obj.ids, end_number_to_match))
                 res_obj = res_obj[0]
             if res_obj:
+                #CUSTOM OSKAB for agency choice
+                # I put it in the offical module to avoid duplicate code ...
+                section = False
+                if hasattr(res_obj, 'section_id') and res_obj.section_id:
+                    section = res_obj.section_id.id
+                elif hasattr(res_obj, 'zip') and hasattr(res_obj, 'country_id'):
+                    section = self.env['res.country.zipcode'].find_team(res_obj.zip, res_obj.country_id)
                 name = res_obj.name_get()[0][1]
-                res = (objname, res_obj.id, name)
+                res = (objname, res_obj.id, name, section)
                 _logger.debug(
-                    u"Answer get_record_from_phone_number: (%s, %d, %s)"
-                    % (res[0], res[1], res[2]))
+                    u"Answer get_record_from_phone_number: (%s, %d, %s, %s)"
+                    % (res[0], res[1], res[2], res[3]))
+                # END CUSTOM
                 return res
             else:
                 _logger.debug(
