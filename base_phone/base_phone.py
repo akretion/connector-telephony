@@ -187,9 +187,11 @@ class PhoneCommon(models.AbstractModel):
                 # I put it in the offical module to avoid duplicate code ...
                 section = False
                 if hasattr(res_obj, 'section_id') and res_obj.section_id:
-                    section = res_obj.section_id.parent_id and res_obj.section_id.parent_id.id or res_obj.section_id.id
+                    section = res_obj.section_id.parent_id and res_obj.section_id.parent_id or res_obj.section_id
                 elif hasattr(res_obj, 'zip') and hasattr(res_obj, 'country_id'):
                     section = self.env['res.country.zipcode'].find_team(res_obj.zip, res_obj.country_id)
+                if section:
+                    section = section.id
                 name = res_obj.name_get()[0][1]
                 res = (objname, res_obj.id, name, section)
                 _logger.debug(
