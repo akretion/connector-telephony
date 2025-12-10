@@ -4,11 +4,12 @@
 import logging
 
 from odoo import _, api, exceptions, fields, models
+from odoo.addons.sms.tools.sms_api import SmsApiBase
 
 _logger = logging.getLogger(__name__)
 
 
-class IrSmsGateway(models.Model):
+class IrSmsGateway(models.Model, SmsApiBase):
     _name = "ir.sms.gateway"
     _order = "sequence"
     _description = "SMS gateway provider"
